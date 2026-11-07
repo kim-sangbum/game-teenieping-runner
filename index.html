@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>티니핑 러너: 무지개 7계단과 황금 왕관</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app-container">
+
+    <!-- 1. 메인 로비 화면 -->
+    <div id="screen-lobby" class="screen">
+      <!-- 상단 유저 & 재화 바 -->
+      <div class="lobby-header">
+        <div class="user-profile-badge">
+          <div class="user-name-row">
+            <span id="lobby-user-name" class="user-name-title">러너_01</span>
+            <span id="lobby-user-age" class="user-age-pill">7세</span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-edit-age" class="btn-mini-link">연령 변경</button>
+            <button id="btn-change-user" class="btn-mini-link">유저 전환</button>
+          </div>
+        </div>
+        <div class="currency-bar">
+          <div class="currency-badge gold">
+            <span>🪙</span>
+            <span id="currency-gold">500</span>
+          </div>
+          <div class="currency-badge gem">
+            <span>💎</span>
+            <span id="currency-gem">10</span>
+          </div>
+          <button id="btn-toggle-sound" class="btn-sound-toggle" title="사운드 켜기/끄기">🔊</button>
+        </div>
+      </div>
+
+      <!-- 중앙 타이틀 및 난이도 카드 -->
+      <div class="lobby-center">
+        <div class="game-title-group">
+          <h1>TEENIEPING RUNNER</h1>
+          <p class="game-subtitle">💖 캐치! 티니핑 사칙연산 무지개 러닝 💖</p>
+        </div>
+
+        <!-- 동적 난이도 조절(DDA) 안내 카드 -->
+        <div class="difficulty-preview-card">
+          <div class="card-header-label">동적 난이도 시스템 (DDA)</div>
+          <div id="lobby-tier-badge" class="tier-badge toddler">새싹 키즈 (7세 이하)</div>
+          <p id="lobby-tier-desc" class="tier-desc-text">
+            곱셈/나눗셈 없이 오직 직관적인 덧셈(+)과 뺄셈(-) 판넬만 등장합니다!
+          </p>
+
+          <!-- 빠른 연령대 선택 칩 (DDA 즉시 검증용) -->
+          <div class="quick-age-row">
+            <span class="quick-age-label">난이도 빠른 전환:</span>
+            <div class="quick-age-buttons">
+              <button class="btn-quick-age" data-age="6">🍼 6세 키즈</button>
+              <button class="btn-quick-age" data-age="9">🎒 9세 주니어</button>
+              <button class="btn-quick-age" data-age="12">⚡ 12세 중등</button>
+              <button class="btn-quick-age" data-age="15">🔥 15세 마스터</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-info-row">
+          <span id="lobby-stage-badge">Stage 1</span>
+          <span>최고 점수: <strong id="lobby-high-score">0</strong></span>
+        </div>
+      </div>
+
+      <!-- 하단 버튼 영역 -->
+      <div class="lobby-footer">
+        <button id="btn-play" class="btn-primary-play">🚀 게임 시작</button>
+        <button id="btn-open-shop" class="btn-secondary-action">
+          <span>🛍️</span>
+          <span>커스터마이징 상점 (데이터 검증)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. 인게임 화면 -->
+    <div id="screen-game" class="screen hidden">
+      <!-- 상단 HUD -->
+      <div class="in-game-hud">
+        <div class="hud-top-row">
+          <div id="hud-stage" class="hud-stage-badge">STAGE 1</div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button id="btn-pause-game" class="btn-pause-icon" title="일시정지 (ESC)">⏸️</button>
+          </div>
+        </div>
+        <div class="hud-progress-wrap">
+          <div class="hud-progress-bar">
+            <div id="hud-progress-fill"></div>
+          </div>
+          <div id="hud-goal-target" class="hud-goal-target">목표: 30명</div>
+        </div>
+      </div>
+
+      <!-- [요구사항 1] 화면 제일 가운데 아래쪽에 크게 표시되는 인원수 카운터 -->
+      <div class="hud-bottom-counter-container">
+        <div class="hud-bottom-crowd-badge">
+          <span class="hud-fairy-icon">🧚</span>
+          <span id="hud-crowd-count" class="hud-big-crowd-number">1</span>
+          <span class="hud-crowd-unit">명</span>
+        </div>
+      </div>
+
+      <div class="hud-swipe-guide">↔ 좌우 화살표 키 또는 화면 드래그로 조작하세요</div>
+
+      <!-- 3D 렌더러 & 2D 파티클 오버레이 영역 -->
+      <div id="game-canvas-container">
+        <canvas id="particle-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- 2.5 일시정지 모달 -->
+    <div id="modal-pause" class="modal-overlay hidden">
+      <div class="modal-card" style="text-align: center;">
+        <div class="result-title" style="color: var(--primary); margin-bottom: 8px;">⏸️ 게임 일시정지</div>
+        <p style="color: var(--text-sub); font-size: 0.9rem; margin-bottom: 20px;">잠시 숨을 고르고 계속 달려보세요!</p>
+        <div class="result-actions">
+          <button id="btn-resume-game" class="btn-primary-play">▶️ 계속하기</button>
+          <button id="btn-pause-retry" class="btn-secondary-action">🔄 다시 시작</button>
+          <button id="btn-pause-lobby" class="btn-secondary-action">🏠 로비로 이동</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 결과 화면 모달 -->
+    <div id="modal-result" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="result-content">
+          <div id="result-title" class="result-title success">🎉 스테이지 완료!</div>
+          <div id="result-subtitle" class="result-subtitle">계단 꼭대기 보물상자를 획득했습니다!</div>
+
+          <div class="result-stat-grid">
+            <div class="stat-box">
+              <span class="stat-label">도달 계단</span>
+              <span id="result-stairs" class="stat-value">6 / 6 칸</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">최종 랭킹 점수</span>
+              <span id="result-score" class="stat-value">120</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">획득 골드</span>
+              <span id="result-gold" class="stat-value gold">+250</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">획득 보물</span>
+              <span id="result-gems" class="stat-value gem">+5</span>
+            </div>
+          </div>
+
+          <div class="result-actions">
+            <button id="btn-next-stage" class="btn-primary-play">다음 스테이지 ▶</button>
+            <button id="btn-retry" class="btn-secondary-action">다시 시도 (Retry)</button>
+            <button id="btn-lobby" class="btn-secondary-action">로비로 이동</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 커스터마이징 상점 모달 (데이터 구조 및 상태 관리용) -->
+    <div id="modal-shop" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title">🛍️ 커스터마이징 상점</div>
+          <button id="btn-close-shop" class="btn-close-modal">&times;</button>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 10px; font-weight: 800; font-size: 0.9rem;">
+          <span style="color: var(--accent);">🪙 <span id="shop-gold">0</span></span>
+          <span style="color: #a855f7;">💎 <span id="shop-gem">0</span></span>
+        </div>
+
+        <div id="shop-category-tabs" class="shop-tabs-row">
+          <!-- 탭 버튼들 동적 렌더링 -->
+        </div>
+
+        <div id="shop-items-grid" class="shop-grid">
+          <!-- 아이템 카드들 동적 렌더링 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. 유저 등록 및 선택 모달 -->
+    <div id="modal-user-select" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title">👤 유저 선택 및 등록</div>
+          <button id="btn-close-user-modal" class="btn-close-modal">&times;</button>
+        </div>
+
+        <div class="card-header-label">기존 계정 선택</div>
+        <div id="user-list-container" class="user-list-box">
+          <!-- 유저 목록 -->
+        </div>
+
+        <div class="user-create-box">
+          <div class="card-header-label">새 유저 등록 (연령 필수)</div>
+          <div class="input-row">
+            <input id="input-new-user-name" type="text" class="input-field" placeholder="유저 닉네임" maxlength="12">
+            <input id="input-new-user-age" type="number" class="input-field age-input" placeholder="나이" min="3" max="100" value="7">
+          </div>
+          <button id="btn-create-user" class="btn-secondary-action" style="background: var(--primary); color: #000; font-weight: 800;">
+            새 프로필 생성
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 3D 그래픽 라이브러리 Three.js (오프라인 로컬 탑재) -->
+  <script src="js/three.min.js"></script>
+  <!-- 메인 스크립트 번들 (로컬 file:// 및 웹서버 모두 지원) -->
+  <script src="js/app.bundle.js"></script>
+</body>
+</html>
